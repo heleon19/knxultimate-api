@@ -1,5 +1,5 @@
 {
-  "name": "knxultimateapi",
+  "name": "knxultimate-api",
   "description": "node-red-contrib-KNX-Ultimate KNX API (https://flows.nodered.org/node/node-red-contrib-knx-ultimate)",
   "version": "2.3.7",
   "engines": {
@@ -8,7 +8,7 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "https://maxsupergiovane@bitbucket.org/maxsupergiovane/knxultimateapi.git"
+    "url": "https://maxsupergiovane@bitbucket.org/maxsupergiovane/knxultimate-api.git"
   },
   "scripts": {
     "test": "multi-tape test/*/test-*.js"
