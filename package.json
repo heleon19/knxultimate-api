@@ -1,6 +1,6 @@
 {
   "name": "knxultimateapi",
-  "description": "node-red-contrib-KNX-Ultimate KNX API",
+  "description": "node-red-contrib-KNX-Ultimate KNX API (https://flows.nodered.org/node/node-red-contrib-knx-ultimate)",
   "version": "2.3.7",
   "engines": {
     "node": ">=4"
