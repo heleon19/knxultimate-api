@@ -1,77 +1,34 @@
 {
-  "name": "knx",
-  "description": "KNXnet/IP protocol implementation for Node(>=4.x)",
-  "version": "2.3.6",
+  "name": "knxultimateapi",
+  "description": "node-red-contrib-KNX-Ultimate KNX API",
+  "version": "2.3.7",
   "engines": {
     "node": ">=4"
   },
   "private": false,
   "repository": {
     "type": "git",
-    "url": "https://ekarak@bitbucket.org/ekarak/knx.js.git"
+    "url": "https://maxsupergiovane@bitbucket.org/maxsupergiovane/knxultimateapi.git"
   },
   "scripts": {
     "test": "multi-tape test/*/test-*.js"
   },
   "license": "MIT",
   "author": {
-    "name": "Elias Karakoulakis",
-    "email": "Elias.Karakoulakis@gmail.com"
+    "name": "Supergiovane",
+    "email": "info@supergiovane.it"
   },
   "maintainers": [
     {
-      "name": "Elias Karakoulakis",
-      "email": "elias.karakoulakis@gmail.com"
+      "name": "Supergiovane",
+      "email": "info@supergiovane.it"
     }
   ],
   "contributors": [
-    {
-      "name": "Mattias Holmlund",
-      "email": "mattias@holmlund.se"
-    },
-    {
-      "name": "Kay Ringmann",
-      "email": "info@punktnetzwerk.net"
-    },
-    {
-      "name": "Timo Krieger",
-      "url": "https://bitbucket.org/timokri/"
-    },
-    {
-      "name": "Cédric Trévisan",
-      "url": "https://bitbucket.org/ctrevisan/"
-    },
-    {
-      "name": "Timo Müller",
-      "email": "timomueller1993@gmail.com"
-    },
-    {
-      "name": "Patrik Åkerfeldt"
-    },
-    {
-      "name": "Johannes Ritter"
-    },
-    {
-      "name": "Koen Reynaert"
-    },
-    {
-      "name": "Luca Lanziani",
-      "url": "https://lanziani.com"
-    },
-    {
-      "name": "Stefaan Seys"
-    },
-    {
-      "name": "Matthias Fechner"
-    },
-    {
-      "name": "Christian Duernberger"
-    }
+    
   ],
   "keywords": [
-    "knx",
-    "smart home",
-    "building automation"
+
   ],
   "dependencies": {
     "@types/node": "^6.14.4",
