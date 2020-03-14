@@ -11,7 +11,7 @@ function IpTunnelingConnection(instance, options) {
 
   var log = KnxLog.get();
 
-  instance.BindSocket = function(cb) {
+  instance.BindSocket = function (cb) {
     var udpSocket = dgram.createSocket("udp4");
     udpSocket.bind(function() {
       KnxLog.get().debug('IpTunnelingConnection.BindSocket %s:%d',

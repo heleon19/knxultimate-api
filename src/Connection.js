@@ -195,7 +195,7 @@ FSM.prototype.send = function(datagram, callback) {
   }
 }
 
-FSM.prototype.write = function(grpaddr, value, dptid, callback) {
+FSM.prototype.write = function (grpaddr, value, dptid, callback) {
   if (grpaddr == null || value == null) {
     KnxLog.get().warn('You must supply both grpaddr and value!');
     return;

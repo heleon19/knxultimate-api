@@ -15,7 +15,7 @@ const KnxLog = require('./KnxLog.js');
 
 module.exports = machina.Fsm.extend({
 
-  initialize: function( options ) {
+  initialize: function (options) {
     this.options = options || {};
     // initialise the log driver - to set the loglevel
     this.log = KnxLog.get(options);
@@ -33,9 +33,11 @@ module.exports = machina.Fsm.extend({
       port: options.ipPort || 3671
     };
     var range = this.remoteEndpoint.addr.range();
+    this.localEchoInTunneling = typeof options.localEchoInTunneling !== "undefined" ? options.localEchoInTunneling : false; // 14=73/2020 Supergiovane (local echo of emitEvent if in tunneling mode)
     this.log.debug('initializing %s connection to %s', range, this.remoteEndpoint.addrstring);
     switch (range) {
       case 'multicast':
+        if (this.localEchoInTunneling) { this.localEchoInTunneling = false; this.log.debug('localEchoInTunneling: true but DISABLED because i am on multicast'); }; // 14/03/2020 Supergiovane: if multicast, disable the localEchoInTunneling, because there is already an echo
         IpRoutingConnection(this, options);
         break;
       case 'unicast':
@@ -56,19 +58,19 @@ module.exports = machina.Fsm.extend({
   states: {
 
     uninitialized: {
-      "*": function() {
-        this.transition( "connecting" );
+      "*": function () {
+        this.transition("connecting");
       }
     },
 
     jumptoconnecting: {
-      _onEnter: function( ) {
+      _onEnter: function () {
         this.transition("connecting");
       }
     },
 
     connecting: {
-      _onEnter: function( ) {
+      _onEnter: function () {
         // tell listeners that we disconnected
         // putting this here will result in a correct state for our listeners
         this.emit('disconnected');
@@ -79,10 +81,10 @@ module.exports = machina.Fsm.extend({
           if (!this.localAddress) throw "Not bound to an IPv4 non-loopback interface";
           this.log.debug(util.format('Connecting via %s...', sm.localAddress));
           // we retry 3 times, then restart the whole cycle using a slower and slower rate (max delay is 5 minutes)
-          this.connecttimer = setInterval( function() {
+          this.connecttimer = setInterval(function () {
             sm.connection_attempts += 1;
             if (sm.connection_attempts >= 3) {
-              clearInterval( sm.connecttimer );
+              clearInterval(sm.connecttimer);
               // quite a few KNXnet/IP devices drop any tunneling packets received via multicast
               if (sm.remoteEndpoint.addr.range() == 'multicast') {
                 this.log.warn('connection timed out, falling back to pure routing mode...');
@@ -93,28 +95,28 @@ module.exports = machina.Fsm.extend({
                 sm.reconnection_cycles += 1;
                 var delay = Math.min(sm.reconnection_cycles * 3, 300);
                 this.log.debug('reattempting connection in ' + delay + ' seconds');
-                setTimeout(function() {
+                setTimeout(function () {
                   // restart connecting cycle (cannot jump straight to 'connecting' so we use an intermediate state)
                   sm.transition("jumptoconnecting");
                 }, delay * 1000);
               }
             } else {
               this.log.warn('connection timed out, retrying...');
-              this.send( sm.prepareDatagram( KnxConstants.SERVICE_TYPE.CONNECT_REQUEST ));
+              this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECT_REQUEST));
             }
-          }.bind( this ), 3000 );
+          }.bind(this), 3000);
           delete this.channel_id;
           delete this.conntime;
           delete this.lastSentTime;
           // send connect request directly
-          this.send( sm.prepareDatagram( KnxConstants.SERVICE_TYPE.CONNECT_REQUEST ));
+          this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECT_REQUEST));
         } else {
           // no connection sequence needed in pure multicast routing
-          this.transition( "connected" );
+          this.transition("connected");
         }
       },
-      _onExit: function( ) {
-        clearInterval( this.connecttimer );
+      _onExit: function () {
+        clearInterval(this.connecttimer);
       },
       inbound_CONNECT_RESPONSE: function (datagram) {
         var sm = this;
@@ -123,19 +125,19 @@ module.exports = machina.Fsm.extend({
           try {
             this.socket.close();
           } catch (error) {
-            
+
           }
-          this.transition( 'uninitialized');
-          this.emit( 'disconnected' );
+          this.transition('uninitialized');
+          this.emit('disconnected');
           this.log.debug("The KNXnet/IP server rejected the data connection (Maximum connections reached). Waiting 1 minute before retrying...");
-          setTimeout(function(){
+          setTimeout(function () {
             sm.Connect()
           }, 60000)
         } else {
           // store channel ID into the Connection object
           this.channel_id = datagram.connstate.channel_id;
           // send connectionstate request directly
-          this.send( sm.prepareDatagram( KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST ));
+          this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST));
           // TODO: handle send err
         }
       },
@@ -145,17 +147,17 @@ module.exports = machina.Fsm.extend({
           this.log.debug(util.format(
             'Got connection state response, connstate: %s, channel ID: %d',
             str, datagram.connstate.channel_id));
-          this.transition( 'connected');
+          this.transition('connected');
         }
       },
-      "*": function ( data ) {
+      "*": function (data) {
         this.log.debug(util.format('*** deferring Until Transition %j', data));
-        this.deferUntilTransition( 'idle' );
+        this.deferUntilTransition('idle');
       }
     },
 
     connected: {
-      _onEnter: function() {
+      _onEnter: function () {
         // Reset connection reattempts cycle counter for next disconnect
         this.reconnection_cycles = 0;
         // Reset outgoing sequence counter..
@@ -164,7 +166,7 @@ module.exports = machina.Fsm.extend({
           outgoing datagrams. We only keep track of the OUTGOING L_Data.req
           and we simply acknowledge the incoming datagrams with their own seqnum */
         this.lastSentTime = this.conntime = Date.now();
-        this.log.debug(util.format('--- Connected in %s mode ---', this.useTunneling? 'TUNNELING':'ROUTING'));
+        this.log.debug(util.format('--- Connected in %s mode ---', this.useTunneling ? 'TUNNELING' : 'ROUTING'));
         this.transition('idle');
         this.emit('connected');
       }
@@ -172,31 +174,31 @@ module.exports = machina.Fsm.extend({
 
     disconnecting: {
       // TODO: skip on pure routing
-      _onEnter: function() {
+      _onEnter: function () {
         if (this.useTunneling) {
           var sm = this;
           var aliveFor = this.conntime ? Date.now() - this.conntime : 0;
-          KnxLog.get().debug('(%s):\tconnection alive for %d seconds', this.compositeState(), aliveFor/1000);
-          this.disconnecttimer = setTimeout( function() {
+          KnxLog.get().debug('(%s):\tconnection alive for %d seconds', this.compositeState(), aliveFor / 1000);
+          this.disconnecttimer = setTimeout(function () {
             KnxLog.get().debug('(%s):\tconnection timed out', sm.compositeState());
             try {
               sm.socket.close();
             } catch (error) {
-              
+
             }
-            
-            sm.transition( 'uninitialized');
-            sm.emit( 'disconnected' );
-          }.bind( this ), 3000 );
+
+            sm.transition('uninitialized');
+            sm.emit('disconnected');
+          }.bind(this), 3000);
           //
-          this.send( this.prepareDatagram ( KnxConstants.SERVICE_TYPE.DISCONNECT_REQUEST), function(err) {
+          this.send(this.prepareDatagram(KnxConstants.SERVICE_TYPE.DISCONNECT_REQUEST), function (err) {
             // TODO: handle send err
             KnxLog.get().debug('(%s):\tsent DISCONNECT_REQUEST', sm.compositeState());
           });
         }
       },
-      _onExit: function() {
-        clearTimeout( this. disconnecttimer )
+      _onExit: function () {
+        clearTimeout(this.disconnecttimer)
       },
       inbound_DISCONNECT_RESPONSE: function (datagram) {
         if (this.useTunneling) {
@@ -204,62 +206,62 @@ module.exports = machina.Fsm.extend({
           try {
             this.socket.close();
           } catch (error) {
-            
+
           }
-          
-          this.transition( 'uninitialized');
-          this.emit( 'disconnected' );
+
+          this.transition('uninitialized');
+          this.emit('disconnected');
         }
       },
     },
 
     idle: {
-      _onEnter: function() {
+      _onEnter: function () {
         if (this.useTunneling) {
-          this.idletimer = setTimeout( function() {
+          this.idletimer = setTimeout(function () {
             // time out on inactivity...
-            this.transition(  "requestingConnState" );
-          }.bind( this ), 10000 );
+            this.transition("requestingConnState");
+          }.bind(this), 10000);
         }
         // debuglog the current FSM state plus a custom message
         KnxLog.get().debug('(%s):\t%s', this.compositeState(), ' zzzz...');
         // process any deferred items from the FSM internal queue
         this.processQueue();
       },
-      _onExit: function() {
-        clearTimeout( this.idletimer );
+      _onExit: function () {
+        clearTimeout(this.idletimer);
       },
       // while idle we can either...
 
       // 1) queue an OUTGOING routing indication...
-      outbound_ROUTING_INDICATION: function ( datagram ) {
+      outbound_ROUTING_INDICATION: function (datagram) {
         var sm = this;
         var elapsed = Date.now() - this.lastSentTime;
         // if no miminum delay set OR the last sent datagram was long ago...
         if (!this.options.minimumDelay || elapsed >= this.options.minimumDelay) {
           // ... send now
-          this.transition( 'sendDatagram', datagram );
+          this.transition('sendDatagram', datagram);
         } else {
           // .. or else, let the FSM handle it later
           setTimeout(function () {
-            sm.handle( 'outbound_ROUTING_INDICATION', datagram );
+            sm.handle('outbound_ROUTING_INDICATION', datagram);
           }, this.minimumDelay - elapsed);
         }
       },
 
       // 2) queue an OUTGOING tunelling request...
-      outbound_TUNNELING_REQUEST: function ( datagram ) {
+      outbound_TUNNELING_REQUEST: function (datagram) {
         var sm = this;
         if (this.useTunneling) {
           var elapsed = Date.now() - this.lastSentTime;
           // if no miminum delay set OR the last sent datagram was long ago...
           if (!this.options.minimumDelay || elapsed >= this.options.minimumDelay) {
             // ... send now
-            this.transition( 'sendDatagram', datagram );
+            this.transition('sendDatagram', datagram);
           } else {
             // .. or else, let the FSM handle it later
             setTimeout(function () {
-              sm.handle( 'outbound_TUNNELING_REQUEST', datagram );
+              sm.handle('outbound_TUNNELING_REQUEST', datagram);
             }, this.minimumDelay - elapsed);
           }
         } else {
@@ -268,9 +270,9 @@ module.exports = machina.Fsm.extend({
       },
 
       // 3) receive an INBOUND tunneling request INDICATION (L_Data.ind)
-      'inbound_TUNNELING_REQUEST_L_Data.ind': function( datagram ) {
+      'inbound_TUNNELING_REQUEST_L_Data.ind': function (datagram) {
         if (this.useTunneling) {
-          this.transition( 'recvTunnReqIndication', datagram );
+          this.transition('recvTunnReqIndication', datagram);
         }
       },
 
@@ -279,7 +281,7 @@ module.exports = machina.Fsm.extend({
        *  reached its intended destination. This usually requires setting the 'Sending' flag
        *  in ETS, usually on the 'primary' device that contains the actuator endpoint
        */
-      'inbound_TUNNELING_REQUEST_L_Data.con': function ( datagram ) {
+      'inbound_TUNNELING_REQUEST_L_Data.con': function (datagram) {
         if (this.useTunneling) {
           var msg;
           var confirmed = this.sentTunnRequests[datagram.cemi.dest_addr];
@@ -296,13 +298,13 @@ module.exports = machina.Fsm.extend({
       },
 
       // 5) receive an INBOUND ROUTING_INDICATION (L_Data.ind)
-      'inbound_ROUTING_INDICATION_L_Data.ind': function( datagram ) {
+      'inbound_ROUTING_INDICATION_L_Data.ind': function (datagram) {
         this.emitEvent(datagram);
       },
 
-      inbound_DISCONNECT_REQUEST: function( datagram ) {
+      inbound_DISCONNECT_REQUEST: function (datagram) {
         if (this.useTunneling) {
-          this.transition( 'connecting' );
+          this.transition('connecting');
         }
       },
 
@@ -310,55 +312,55 @@ module.exports = machina.Fsm.extend({
 
     // if idle for too long, request connection state from the KNX IP router
     requestingConnState: {
-      _onEnter: function( ) {
+      _onEnter: function () {
         var sm = this;
         KnxLog.get().trace('(%s): Requesting Connection State', this.compositeState());
-        this.send (sm.prepareDatagram (KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST));
+        this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST));
         // TODO: handle send err
         //
-        this.connstatetimer = setTimeout( function() {
+        this.connstatetimer = setTimeout(function () {
           var msg = 'timed out waiting for CONNECTIONSTATE_RESPONSE';
           KnxLog.get().trace('(%s): %s', sm.compositeState(), msg);
-          sm.transition( 'connecting' );
+          sm.transition('connecting');
           sm.emit('error', msg);
-        }.bind( this ), 1000 );
+        }.bind(this), 1000);
       },
-      _onExit: function() {
-        clearTimeout( this.connstatetimer );
+      _onExit: function () {
+        clearTimeout(this.connstatetimer);
       },
-      inbound_CONNECTIONSTATE_RESPONSE: function ( datagram ) {
+      inbound_CONNECTIONSTATE_RESPONSE: function (datagram) {
         var state = KnxConstants.keyText('RESPONSECODE', datagram.connstate.status);
         switch (datagram.connstate.status) {
           case 0:
-            this.transition( 'idle');
+            this.transition('idle');
             break;
           default:
             this.log.debug(util.format(
               '*** error: %s *** (connstate.code: %d)', state, datagram.connstate.status));
-            this.transition( 'connecting' );
+            this.transition('connecting');
             this.emit('error', state);
         }
       },
-      "*": function ( data ) {
+      "*": function (data) {
         this.log.debug(util.format('*** deferring %s until transition from requestingConnState => idle', data.inputType));
-        this.deferUntilTransition( 'idle' );
+        this.deferUntilTransition('idle');
       },
     },
 
     /*
     * 1) OUTBOUND DATAGRAM (ROUTING_INDICATION or TUNNELING_REQUEST)
     */
-    sendDatagram:  {
-      _onEnter: function ( datagram ) {
+    sendDatagram: {
+      _onEnter: function (datagram) {
         var sm = this;
         // send the telegram on the wire
         this.seqnum += 1;
         if (this.useTunneling) datagram.tunnstate.seqnum = this.seqnum & 0xFF;
-        this.send( datagram, function(err) {
+        this.send(datagram, function (err) {
           if (err) {
             //console.trace('error sending datagram, going idle');
             sm.seqnum -= 1;
-            sm.transition( 'idle' );
+            sm.transition('idle');
           } else {
             // successfully sent the datagram
             if (sm.useTunneling) sm.sentTunnRequests[datagram.cemi.dest_addr] = datagram;
@@ -366,44 +368,57 @@ module.exports = machina.Fsm.extend({
             sm.log.debug('(%s):\t>>>>>>> successfully sent seqnum: %d', sm.compositeState(), sm.seqnum);
             if (sm.useTunneling) {
               // and then wait for the acknowledgement
-              sm.transition( 'sendTunnReq_waitACK', datagram );
+              sm.transition('sendTunnReq_waitACK', datagram);
             } else {
-              sm.transition( 'idle' );
+              sm.transition('idle');
             }
           }
-          if (sm.useTunneling) sm.sentTunnRequests[datagram.cemi.dest_addr] = datagram;
+          // 14/03/2020 Supergiovane: In multicast mode, other node-red nodes receives the echo of the telegram sent (the groupaddress_write event). If in tunneling, force the emit of the echo datagram (so other node-red nodes can receive the echo), because in tunneling, there is no echo.
+          // ########################
+          //if (sm.useTunneling) sm.sentTunnRequests[datagram.cemi.dest_addr] = datagram;
+          if (sm.useTunneling) {
+            sm.sentTunnRequests[datagram.cemi.dest_addr] = datagram;
+            if (typeof sm.localEchoInTunneling !== "undefined" && sm.localEchoInTunneling) {
+              try {
+                sm.emitEvent(datagram);
+                sm.log.debug('(%s):\t>>>>>>> localEchoInTunneling: echoing by emitting %d', sm.compositeState(), sm.seqnum);
+              } catch (error) {
+                sm.log.debug('(%s):\t>>>>>>> localEchoInTunneling: error echoing by emitting %d ' + error , sm.compositeState(), sm.seqnum);            }
+            }
+          }
+          // ########################
         });
       },
-      "*": function ( data ) {
+      "*": function (data) {
         this.log.debug(util.format('*** deferring %s until transition sendDatagram => idle', data.inputType));
-        this.deferUntilTransition( 'idle' );
+        this.deferUntilTransition('idle');
       }
     },
     /*
     * Wait for tunneling acknowledgement by the IP router; this means the sent UDP packet
     * reached the IP router and NOT that the datagram reached its final destination
     */
-    sendTunnReq_waitACK:  {
-      _onEnter: function ( datagram ) {
+    sendTunnReq_waitACK: {
+      _onEnter: function (datagram) {
         var sm = this;
         //this.log.debug('setting up tunnreq timeout for %j', datagram);
-        this.tunnelingAckTimer = setTimeout( function() {
+        this.tunnelingAckTimer = setTimeout(function () {
           this.log.debug('timed out waiting for TUNNELING_ACK');
           // TODO: resend datagram, up to 3 times
-          sm.transition( 'idle' );
+          sm.transition('idle');
           sm.emit('tunnelreqfailed', datagram);
-        }.bind( this ), 2000 );
+        }.bind(this), 2000);
       },
       _onExit: function () {
-        clearTimeout( this.tunnelingAckTimer );
+        clearTimeout(this.tunnelingAckTimer);
       },
-      inbound_TUNNELING_ACK: function ( datagram ) {
+      inbound_TUNNELING_ACK: function (datagram) {
         this.log.debug(util.format('===== datagram %d acknowledged by IP router', datagram.tunnstate.seqnum));
-        this.transition( 'idle' );
+        this.transition('idle');
       },
-      "*": function ( data ) {
+      "*": function (data) {
         this.log.debug(util.format('*** deferring %s until transition sendTunnReq_waitACK => idle', data.inputType));
-        this.deferUntilTransition( 'idle' );
+        this.deferUntilTransition('idle');
       },
     },
 
@@ -415,73 +430,73 @@ module.exports = machina.Fsm.extend({
         var sm = this;
         sm.seqnumRecv = datagram.tunnstate.seqnum;
         sm.acknowledge(datagram);
-        sm.transition( 'idle' );
+        sm.transition('idle');
         sm.emitEvent(datagram);
       },
-      "*": function ( data ) {
+      "*": function (data) {
         this.log.debug(util.format('*** deferring Until Transition %j', data));
-        this.deferUntilTransition( 'idle' );
+        this.deferUntilTransition('idle');
       },
     },
   },
 
-  acknowledge: function(datagram) {
+  acknowledge: function (datagram) {
     var sm = this;
     var ack = this.prepareDatagram(
       KnxConstants.SERVICE_TYPE.TUNNELING_ACK,
       datagram);
     /* acknowledge by copying the inbound datagram's sequence counter */
     ack.tunnstate.seqnum = datagram.tunnstate.seqnum;
-    this.send(ack, function(err) {
+    this.send(ack, function (err) {
       // TODO: handle send err
     });
   },
 
-  emitEvent: function(datagram) {
+  emitEvent: function (datagram) {
     // emit events to our beloved subscribers in a multitude of targets
     // ORDER IS IMPORTANT!
     var evtName = datagram.cemi.apdu.apci;
     // 1.
     // 'event_<dest_addr>', ''GroupValue_Write', src, data
     this.emit(util.format("event_%s", datagram.cemi.dest_addr),
-      evtName, datagram.cemi.src_addr, datagram.cemi.apdu.data );
+      evtName, datagram.cemi.src_addr, datagram.cemi.apdu.data);
     // 2.
     // 'GroupValue_Write_1/2/3', src, data
     this.emit(util.format("%s_%s", evtName, datagram.cemi.dest_addr),
-      datagram.cemi.src_addr, datagram.cemi.apdu.data );
+      datagram.cemi.src_addr, datagram.cemi.apdu.data);
     // 3.
     // 'GroupValue_Write', src, dest, data
     this.emit(evtName,
-      datagram.cemi.src_addr, datagram.cemi.dest_addr, datagram.cemi.apdu.data );
+      datagram.cemi.src_addr, datagram.cemi.dest_addr, datagram.cemi.apdu.data);
     // 4.
     // 'event', 'GroupValue_Write', src, dest, data
     this.emit("event",
-      evtName, datagram.cemi.src_addr, datagram.cemi.dest_addr, datagram.cemi.apdu.data );
+      evtName, datagram.cemi.src_addr, datagram.cemi.dest_addr, datagram.cemi.apdu.data);
 
   },
   // get the local address of the IPv4 interface we're going to use
-  getIPv4Interfaces: function() {
+  getIPv4Interfaces: function () {
     var candidateInterfaces = {};
     var interfaces = os.networkInterfaces();
     for (var iface in interfaces) {
-        for (var key in interfaces[iface]) {
-            var intf = interfaces[iface][key];
-            if (intf.family == 'IPv4' && !intf.internal) {
-              this.log.trace(util.format(
-                "candidate interface: %s (%j)", iface, intf
-              ));
-              candidateInterfaces[iface] = intf;
-            }
+      for (var key in interfaces[iface]) {
+        var intf = interfaces[iface][key];
+        if (intf.family == 'IPv4' && !intf.internal) {
+          this.log.trace(util.format(
+            "candidate interface: %s (%j)", iface, intf
+          ));
+          candidateInterfaces[iface] = intf;
         }
+      }
     }
     return candidateInterfaces;
   },
-  getLocalAddress: function() {
+  getLocalAddress: function () {
     var candidateInterfaces = this.getIPv4Interfaces();
     // if user has declared a desired interface then use it
     if (this.options && this.options.interface) {
       if (!candidateInterfaces.hasOwnProperty(this.options.interface))
-        throw "Interface "+this.options.interface+" not found or has no useful IPv4 address!"
+        throw "Interface " + this.options.interface + " not found or has no useful IPv4 address!"
       else
         return candidateInterfaces[this.options.interface].address;
     }
