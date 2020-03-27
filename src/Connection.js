@@ -39,12 +39,16 @@ FSM.prototype.onUdpSocketMessage = function (msg, rinfo, callback) {
       }
       // 27/03/2020 Supergiovane: Added the CEMI telegram for ETS Diagnostic
       // #####################################################################
-      if (dg.hasOwnProperty("header_length") && typeof dg.header_length === "number") {
-        try {
-          dg.cemi.cemiETS = msg.toString("hex").substring(dg.header_length * 2);
-        } catch (error) {dg.cemi.cemiETS = "";}
-      } else {
-        dg.cemi.cemiETS = "";
+      if (dg.hasOwnProperty("cemi") && typeof dg.cemi !== "undefined") {
+        if (dg.hasOwnProperty("header_length") && typeof dg.header_length === "number") {
+          try {
+            var iStart = dg.header_length;
+            if (dg.hasOwnProperty("tunnstate") && dg.tunnstate.hasOwnProperty("header_length") && typeof dg.tunnstate.header_length === "number") iStart += dg.tunnstate.header_length; // Add the tunnel lenght
+            dg.cemi.cemiETS = msg.toString("hex").substring(iStart * 2);
+          } catch (error) { dg.cemi.cemiETS = ""; }
+        } else {
+          dg.cemi.cemiETS = "";
+        }
       }
       // #####################################################################
       this.handle(signal, dg);
