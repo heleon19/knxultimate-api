@@ -1,6 +1,6 @@
 /**
 * knx.js - a KNX protocol stack in pure Javascript
-* (C) 2016-2018 Elias Karakoulakis
+* 08/04/2020 Supergiovane
 */
 
 //
@@ -71,7 +71,7 @@ exports.basetype = {
 exports.subtypes = {
     // 9.001 temperature (oC)
     "001": {
-        name: "DPT_SceneControl", desc: "scene control"
+        name: "DPT_SceneControl [payload:{'save_recall':0 (0 to recall or 1 to save), 'scenenumber':2}]", desc: "scene control"
     }
 }
 

@@ -44,7 +44,7 @@ exports.basetype = {
 exports.subtypes = {
   // 3.007 dimming control
   "007": {
-    "name": "DPT_Control_Dimming",
+    "name": "DPT_Control_Dimming [payload:{decr_incr:1 (1 to increase or 0 to decrease), data: 5}]",
     "desc": "dimming control"
   },
 
