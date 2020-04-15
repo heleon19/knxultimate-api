@@ -42,7 +42,7 @@ exports.basetype = {
 
 exports.subtypes = {
     "600" : {
-        "name" : "RGB", "desc" : "RGB color triplet",
+        "name" : "RGB [payload:{red:255, green:200, blue:30}]", "desc" : "RGB color triplet",
         "unit" : "", "scalar_range" : [ , ],
         "range" : [ , ]
     }
