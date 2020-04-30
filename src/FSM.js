@@ -110,6 +110,7 @@ module.exports = machina.Fsm.extend({
           delete this.lastSentTime;
           // send connect request directly
           this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECT_REQUEST));
+
         } else {
           // no connection sequence needed in pure multicast routing
           this.transition("connected");
@@ -138,7 +139,6 @@ module.exports = machina.Fsm.extend({
           this.channel_id = datagram.connstate.channel_id;
           // send connectionstate request directly
           this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST));
-          // TODO: handle send err
         }
       },
       inbound_CONNECTIONSTATE_RESPONSE: function (datagram) {
@@ -175,6 +175,7 @@ module.exports = machina.Fsm.extend({
     disconnecting: {
       // TODO: skip on pure routing
       _onEnter: function () {
+
         if (this.useTunneling) {
           var sm = this;
           var aliveFor = this.conntime ? Date.now() - this.conntime : 0;
@@ -190,7 +191,7 @@ module.exports = machina.Fsm.extend({
             sm.transition('uninitialized');
             sm.emit('disconnected');
           }.bind(this), 3000);
-          //
+
           this.send(this.prepareDatagram(KnxConstants.SERVICE_TYPE.DISCONNECT_REQUEST), function (err) {
             // TODO: handle send err
             KnxLog.get().debug('(%s):\tsent DISCONNECT_REQUEST', sm.compositeState());
@@ -217,11 +218,19 @@ module.exports = machina.Fsm.extend({
 
     idle: {
       _onEnter: function () {
+
         if (this.useTunneling) {
-          this.idletimer = setTimeout(function () {
-            // time out on inactivity...
-            this.transition("requestingConnState");
-          }.bind(this), 10000);
+          // 30/04/2020 Supergiovane, adhere to the KNX standard. Request State must be always sent, every max 120 seconds
+          if (this.idletimer == null) {
+            this.idletimer = setTimeout(function () {
+              // time out on inactivity...
+              console.log("BANANA idle");
+              this.transition("requestingConnState");
+              clearTimeout(this.idletimer);
+              this.idletimer = null;
+            }.bind(this), 10000);
+          }
+
         }
         // debuglog the current FSM state plus a custom message
         KnxLog.get().debug('(%s):\t%s', this.compositeState(), ' zzzz...');
@@ -229,7 +238,8 @@ module.exports = machina.Fsm.extend({
         this.processQueue();
       },
       _onExit: function () {
-        clearTimeout(this.idletimer);
+        // 30/04/2020 Supergiovane, removed cleartimeout, adhering to the KNX standard. Request State must be always sent, every max 120 seconds
+        //clearTimeout(this.idletimer);
       },
       // while idle we can either...
 
@@ -316,8 +326,6 @@ module.exports = machina.Fsm.extend({
         var sm = this;
         KnxLog.get().trace('(%s): Requesting Connection State', this.compositeState());
         this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST));
-        // TODO: handle send err
-        //
         this.connstatetimer = setTimeout(function () {
           var msg = 'timed out waiting for CONNECTIONSTATE_RESPONSE';
           KnxLog.get().trace('(%s): %s', sm.compositeState(), msg);
@@ -383,7 +391,8 @@ module.exports = machina.Fsm.extend({
                 sm.emitEvent(datagram);
                 sm.log.debug('(%s):\t>>>>>>> localEchoInTunneling: echoing by emitting %d', sm.compositeState(), sm.seqnum);
               } catch (error) {
-                sm.log.debug('(%s):\t>>>>>>> localEchoInTunneling: error echoing by emitting %d ' + error , sm.compositeState(), sm.seqnum);            }
+                sm.log.debug('(%s):\t>>>>>>> localEchoInTunneling: error echoing by emitting %d ' + error, sm.compositeState(), sm.seqnum);
+              }
             }
           }
           // ########################
@@ -447,9 +456,13 @@ module.exports = machina.Fsm.extend({
       datagram);
     /* acknowledge by copying the inbound datagram's sequence counter */
     ack.tunnstate.seqnum = datagram.tunnstate.seqnum;
-    this.send(ack, function (err) {
-      // TODO: handle send err
-    });
+    try {
+      this.send(ack, function (err) {
+        // TODO: handle send err
+      });
+    } catch (error) {
+    }
+
   },
 
   // 26/03/2020 Supergiovane, added the cemi for ETS export in knx-ultimate node.
