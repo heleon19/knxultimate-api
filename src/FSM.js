@@ -224,7 +224,6 @@ module.exports = machina.Fsm.extend({
           if (this.idletimer == null) {
             this.idletimer = setTimeout(function () {
               // time out on inactivity...
-              console.log("BANANA idle");
               this.transition("requestingConnState");
               clearTimeout(this.idletimer);
               this.idletimer = null;
