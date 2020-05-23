@@ -14,6 +14,7 @@ const KnxLog = require('./KnxLog');
 const KnxConstants = require('./KnxConstants');
 const KnxNetProtocol = require('./KnxProtocol');
 
+
 // bind incoming UDP packet handler
 FSM.prototype.onUdpSocketMessage = function (msg, rinfo, callback) {
   // get the incoming packet's service type ...

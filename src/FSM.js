@@ -227,7 +227,7 @@ module.exports = machina.Fsm.extend({
               this.transition("requestingConnState");
               clearTimeout(this.idletimer);
               this.idletimer = null;
-            }.bind(this), 10000);
+            }.bind(this), 60000); // 23/05/2020 Supergiovane was 10000
           }
 
         }
@@ -330,7 +330,7 @@ module.exports = machina.Fsm.extend({
           KnxLog.get().trace('(%s): %s', sm.compositeState(), msg);
           sm.transition('connecting');
           sm.emit('error', msg);
-        }.bind(this), 1000);
+        }.bind(this), 30000); // 23/05/2020 Supergiovane, was 1000, but KNX Standard is 10000
       },
       _onExit: function () {
         clearTimeout(this.connstatetimer);

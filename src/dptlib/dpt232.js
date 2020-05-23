@@ -19,7 +19,7 @@ exports.formatAPDU = function(value) {
             value.hasOwnProperty('green') && value.green >= 0 && value.green <= 255 &&
             value.hasOwnProperty('blue')  && value.blue  >= 0 && value.blue  <= 255) {
         } else {
-            log.error("DPT232: Must supply an value {red:0..255, green:0.255, blue:0.255}");
+            log.error("DPT232: Must supply an value {red:0-255, green:0-255, blue:0-255}");
         }
         return new Buffer([
             Math.floor(value.red), 
