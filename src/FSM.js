@@ -123,13 +123,8 @@ module.exports = machina.Fsm.extend({
         var sm = this;
         this.log.debug(util.format('got connect response'));
         if (datagram.hasOwnProperty('connstate') && datagram.connstate.status === KnxConstants.RESPONSECODE.E_NO_MORE_CONNECTIONS) {
-          try {
-            this.socket.close();
-          } catch (error) {
-
-          }
-          this.transition('uninitialized');
-          this.emit('disconnected');
+          // close the socket
+          sm.close();
           this.log.debug("The KNXnet/IP server rejected the data connection (Maximum connections reached). Waiting 1 minute before retrying...");
           setTimeout(function () {
             sm.Connect()
@@ -175,27 +170,26 @@ module.exports = machina.Fsm.extend({
     disconnecting: {
       // TODO: skip on pure routing
       _onEnter: function () {
+        var sm = this;
 
         if (this.useTunneling) {
-          var sm = this;
+          // in case of a tunneled connection a disconnect request will be sent
           var aliveFor = this.conntime ? Date.now() - this.conntime : 0;
           KnxLog.get().debug('(%s):\tconnection alive for %d seconds', this.compositeState(), aliveFor / 1000);
           this.disconnecttimer = setTimeout(function () {
             KnxLog.get().debug('(%s):\tconnection timed out', sm.compositeState());
-            try {
-              sm.socket.close();
-            } catch (error) {
-
-            }
-
-            sm.transition('uninitialized');
-            sm.emit('disconnected');
+            
+            // close the socket
+            sm.close();
           }.bind(this), 3000);
 
           this.send(this.prepareDatagram(KnxConstants.SERVICE_TYPE.DISCONNECT_REQUEST), function (err) {
             // TODO: handle send err
             KnxLog.get().debug('(%s):\tsent DISCONNECT_REQUEST', sm.compositeState());
           });
+        } else {
+          // in case of multicast the socket will be closed directly
+          sm.close();
         }
       },
       _onExit: function () {
@@ -204,14 +198,9 @@ module.exports = machina.Fsm.extend({
       inbound_DISCONNECT_RESPONSE: function (datagram) {
         if (this.useTunneling) {
           KnxLog.get().debug('(%s):\tgot disconnect response', this.compositeState());
-          try {
-            this.socket.close();
-          } catch (error) {
 
-          }
-
-          this.transition('uninitialized');
-          this.emit('disconnected');
+          // close the socket
+          sm.close();
         }
       },
     },
@@ -519,5 +508,17 @@ module.exports = machina.Fsm.extend({
     }
     // no local IpV4 interfaces?
     throw "No valid IPv4 interfaces detected";
+  },
+
+  close: function () {
+    var sm = this;
+
+    try {
+      // close the socket
+      sm.socket.close();
+    } catch (error) { }
+
+    sm.transition('uninitialized');
+    sm.emit('disconnected');
   }
 });
