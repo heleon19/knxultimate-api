@@ -453,7 +453,7 @@ module.exports = machina.Fsm.extend({
 
   },
 
-  // 26/03/2020 Supergiovane, added the cemi for ETS export in knx-ultimate node.
+  // 26/03/2020 Supergiovane, added the cemi datagram.cemi.cemiETS for ETS export in knx-ultimate node.
   emitEvent: function (datagram) {
     // emit events to our beloved subscribers in a multitude of targets
     // ORDER IS IMPORTANT!
