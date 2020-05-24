@@ -125,10 +125,10 @@ module.exports = machina.Fsm.extend({
         if (datagram.hasOwnProperty('connstate') && datagram.connstate.status === KnxConstants.RESPONSECODE.E_NO_MORE_CONNECTIONS) {
           // close the socket
           sm.close();
-          this.log.debug("The KNXnet/IP server rejected the data connection (Maximum connections reached). Waiting 1 minute before retrying...");
+          this.log.debug("The KNXnet/IP server rejected the data connection (Maximum connections reached). Waiting 5 seconds before retrying...");
           setTimeout(function () {
             sm.Connect()
-          }, 60000)
+          }, 5000)
         } else {
           // store channel ID into the Connection object
           this.channel_id = datagram.connstate.channel_id;
@@ -164,6 +164,7 @@ module.exports = machina.Fsm.extend({
         this.log.debug(util.format('--- Connected in %s mode ---', this.useTunneling ? 'TUNNELING' : 'ROUTING'));
         this.transition('idle');
         this.emit('connected');
+        this.startTimerConnectioRequest(true); // 24/05/2020 Supergiovane
       }
     },
 
@@ -172,13 +173,15 @@ module.exports = machina.Fsm.extend({
       _onEnter: function () {
         var sm = this;
 
+        sm.startTimerConnectioRequest(false); // 24/05/2020 Supergiovane
+
         if (this.useTunneling) {
           // in case of a tunneled connection a disconnect request will be sent
           var aliveFor = this.conntime ? Date.now() - this.conntime : 0;
           KnxLog.get().debug('(%s):\tconnection alive for %d seconds', this.compositeState(), aliveFor / 1000);
           this.disconnecttimer = setTimeout(function () {
             KnxLog.get().debug('(%s):\tconnection timed out', sm.compositeState());
-            
+
             // close the socket
             sm.close();
           }.bind(this), 3000);
@@ -208,18 +211,18 @@ module.exports = machina.Fsm.extend({
     idle: {
       _onEnter: function () {
 
-        if (this.useTunneling) {
-          // 30/04/2020 Supergiovane, adhere to the KNX standard. Request State must be always sent, every max 120 seconds
-          if (this.idletimer == null) {
-            this.idletimer = setTimeout(function () {
-              // time out on inactivity...
-              this.transition("requestingConnState");
-              clearTimeout(this.idletimer);
-              this.idletimer = null;
-            }.bind(this), 60000); // 23/05/2020 Supergiovane was 10000
-          }
+        // if (this.useTunneling) {
+        //   // 30/04/2020 Supergiovane, adhere to the KNX standard. Request State must be always sent, every max 120 seconds
+        //   if (this.idletimer == null) {
+        //     this.idletimer = setTimeout(function () {
+        //       // time out on inactivity...
+        //       this.transition("requestingConnState");
+        //       clearTimeout(this.idletimer);
+        //       this.idletimer = null;
+        //     }.bind(this), 60000); // 23/05/2020 Supergiovane was 10000
+        //   }
 
-        }
+        // }
         // debuglog the current FSM state plus a custom message
         KnxLog.get().debug('(%s):\t%s', this.compositeState(), ' zzzz...');
         // process any deferred items from the FSM internal queue
@@ -314,15 +317,16 @@ module.exports = machina.Fsm.extend({
         var sm = this;
         KnxLog.get().trace('(%s): Requesting Connection State', this.compositeState());
         this.send(sm.prepareDatagram(KnxConstants.SERVICE_TYPE.CONNECTIONSTATE_REQUEST));
-        this.connstatetimer = setTimeout(function () {
+        sm.connstatetimer = setTimeout(function () {
           var msg = 'timed out waiting for CONNECTIONSTATE_RESPONSE';
           KnxLog.get().trace('(%s): %s', sm.compositeState(), msg);
           sm.transition('connecting');
           sm.emit('error', msg);
-        }.bind(this), 30000); // 23/05/2020 Supergiovane, was 1000, but KNX Standard is 10000
+        }.bind(sm), 10000); // 23/05/2020 Supergiovane, was 1000, but KNX Standard is 10000
       },
       _onExit: function () {
-        clearTimeout(this.connstatetimer);
+        var sm = this;
+        if (sm.connstatetimer !== null) clearTimeout(sm.connstatetimer);
       },
       inbound_CONNECTIONSTATE_RESPONSE: function (datagram) {
         var state = KnxConstants.keyText('RESPONSECODE', datagram.connstate.status);
@@ -516,9 +520,33 @@ module.exports = machina.Fsm.extend({
     try {
       // close the socket
       sm.socket.close();
+      sm.socket = null; // 24/05/2020 Supergiovane added this line.
     } catch (error) { }
 
     sm.transition('uninitialized');
     sm.emit('disconnected');
+  },
+
+  // 24/05/2020 Supergiovane: query connection status every max 120 secs, as per KNX specs.
+  startTimerConnectioRequest: function (_bEnable) {
+    var sm = this;
+    if (_bEnable) {
+      if (sm.useTunneling) {
+        //console.log("BANANA START TIMER");
+        if (sm.connstatetimer !== null) clearTimeout(sm.connstatetimer);
+        if (sm.timerConnectioRequest !== null) clearTimeout(sm.timerConnectioRequest);
+        sm.timerConnectioRequest = setInterval(function () {
+          //console.log("BANANA sm.transition(requestingConnState);");
+          sm.transition("requestingConnState");
+        },30000);
+      }
+
+    } else {
+      // Stop timer
+      //console.log("BANANA STOP TIMER")
+      if (sm.timerConnectioRequest !== null) clearTimeout(sm.timerConnectioRequest);
+      if (sm.connstatetimer !== null) clearInterval(sm.connstatetimer);
+    }
   }
+
 });
