@@ -6,5 +6,4 @@ This is a fork intended for use ONLY with Node-Red [KNX-Ultimate node](https://f
 
 **This is a HEAVILY MODIFIED AND IMPLEMENTED fork.**
 
-
-Please use the original [KNX.JS API by Elias Karakoulakis](https://www.npmjs.com/package/knx) for your projects instead.
+##Please use the original [KNX.JS API by Elias Karakoulakis](https://www.npmjs.com/package/knx) for your projects instead.
