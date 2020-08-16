@@ -300,6 +300,11 @@ FSM.prototype.read = function (grpaddr, callback) {
 
 FSM.prototype.Disconnect = function (cb) {
   this.transition("disconnecting");
+  //console.log("BANANA Logger distrutto");
+  try {
+    KnxLog.destroy(); // 16/08/2020 Force reinstantiation of the logger to refresh the settings.
+  } catch (error) {}
+ 
   // machina.js removeAllListeners equivalent:
   // this.off();
 }

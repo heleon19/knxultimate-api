@@ -6,12 +6,12 @@ const util = require('util');
 var logger;
 
 module.exports = {
-  get: function(options) {
+  get: function (options) {
     if (!logger) {
       lvl = (options && options.debug && 'debug') ||
           (options && options.loglevel) ||
           'info';
-      //console.trace('new logger, level='+lvl);
+          //console.trace('new logger, level='+lvl);
       logger = require('log-driver')({
         level: lvl,
         format: function() {
@@ -30,5 +30,9 @@ module.exports = {
       });
     }
     return(logger);
+  },
+  destroy: function () {
+    // 16/08/2020 Destruction of the logger
+    logger = null;
   }
 };
