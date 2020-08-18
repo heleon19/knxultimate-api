@@ -9,19 +9,25 @@ module.exports = {
   get: function (options) {
     if (!logger) {
       lvl = (options && options.debug && 'debug') ||
-          (options && options.loglevel) ||
-          'error';
-          //console.trace('new logger, level='+lvl);
+        (options && options.loglevel) ||
+        'error';
+      //console.trace('new logger, level='+lvl);
       logger = require('log-driver')({
         level: lvl,
-        format: function() {
+        format: function () {
           // arguments[0] is the log level ie 'debug'
-          var a  = Array.from(arguments);
+          var a = Array.from(arguments);
+          var ts;
           //var ts = new Date().toISOString().replace(/T/, ' ').replace(/Z$/, '');
-          var ts = new Date().toLocaleString().replace(/T/, ' ').replace(/Z$/, '') + " KnxUltimate-API:"; // 17/08/2020 Added KnxUltimate-Api
+          try {
+            ts = new Date().toLocaleString().replace(/T/, ' ').replace(/Z$/, '') + " KnxUltimate-API:"; // 17/08/2020 Added KnxUltimate-Api  
+          } catch (error) {
+            ts = new Date().toISOString().replace(/T/, ' ').replace(/Z$/, '')  + " KnxUltimate-API:";// 17/08/2020 Added KnxUltimate-Api  
+          }
+
           if (a.length > 2) {
             // if more than one item to log, assume a fmt string is given
-            var fmtargs = ['[%s] %s '+a[1], a[0], ts].concat(a.slice(2));
+            var fmtargs = ['[%s] %s ' + a[1], a[0], ts].concat(a.slice(2));
             return util.format.apply(util, fmtargs);
           } else {
             // arguments[1] is a plain string
@@ -30,7 +36,7 @@ module.exports = {
         }
       });
     }
-    return(logger);
+    return (logger);
   },
   destroy: function () {
     // 16/08/2020 Destruction of the logger
