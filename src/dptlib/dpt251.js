@@ -23,7 +23,6 @@ exports.formatAPDU = function (value) {
     if (!value) {
         log.error("DPT251: cannot write null value");
     } else {
-        var apdu_data;
         if (typeof value == 'object' &&
             value.hasOwnProperty('white') && value.white >= 0 && value.white <= 255 &&
             value.hasOwnProperty('red') && value.red >= 0 && value.red <= 255 &&

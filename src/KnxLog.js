@@ -10,14 +10,15 @@ module.exports = {
     if (!logger) {
       lvl = (options && options.debug && 'debug') ||
           (options && options.loglevel) ||
-          'info';
+          'error';
           //console.trace('new logger, level='+lvl);
       logger = require('log-driver')({
         level: lvl,
         format: function() {
           // arguments[0] is the log level ie 'debug'
           var a  = Array.from(arguments);
-          var ts = new Date().toISOString().replace(/T/, ' ').replace(/Z$/, '');
+          //var ts = new Date().toISOString().replace(/T/, ' ').replace(/Z$/, '');
+          var ts = new Date().toLocaleString().replace(/T/, ' ').replace(/Z$/, '') + " KnxUltimate-API:"; // 17/08/2020 Added KnxUltimate-Api
           if (a.length > 2) {
             // if more than one item to log, assume a fmt string is given
             var fmtargs = ['[%s] %s '+a[1], a[0], ts].concat(a.slice(2));

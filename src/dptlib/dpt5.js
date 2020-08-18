@@ -1,7 +1,11 @@
 /**
 * knx.js - a KNX protocol stack in pure Javascript
-* (C) 2016-2018 Elias Karakoulakis
+* (C) 2020 Supergiovane
 */
+
+
+
+
 
 //
 // DPT5: 8-bit unsigned value
@@ -48,7 +52,13 @@ exports.subtypes = {
 
     // 5.010 counter pulses (0..255)
     "010" : {
-        "name" : "DPT_Value_1_Ucount", "desc" : "counter pulses",
+        "name" : "DPT_Couter_Pulses", "desc" : "counter pulses",
         "unit" : "pulses",
     },
+
+     // 5.100 Fan Stage (0..255)
+     "100" : {
+        "name" : "DPT_Fan_Stage", "desc" : "Fan Stage",
+        "unit" : "",
+    }
 }
