@@ -3,26 +3,26 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT4: 8-bit character
 //
 exports.formatAPDU = function(value) {
   if (!value) {
-    log.warn("DPT4: cannot write null value");
+    knxLog.get().warn("DPT4: cannot write null value");
   } else {
     if (typeof value == 'string') {
       var apdu_data = value.charCodeAt(0);
-      if (apdu_data > 255) log.warn("DPT4: must supply an ASCII character");
+      if (apdu_data > 255) knxLog.get().warn("DPT4: must supply an ASCII character");
       return new Buffer([apdu_data]);
     }
-    else log.warn("DPT4: Must supply a character or string");
+    else knxLog.get().warn("DPT4: Must supply a character or string");
   }
 }
 
 exports.fromBuffer = function(buf) {
-  if (buf.length != 1) log.warn("DPT4: Buffer should be 1 byte long")
+  if (buf.length != 1) knxLog.get().warn("DPT4: Buffer should be 1 byte long")
   else return String.fromCharCode(buf[0]);
 }
 

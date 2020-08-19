@@ -3,7 +3,7 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 // TODO: implement fromBuffer, formatAPDU
 
@@ -14,7 +14,7 @@ const log = require('log-driver').logger;
 
 exports.formatAPDU = function(value) {
   if (typeof value != 'object' || value.constructor.name != 'Date')
-    log.error('DPT19: Must supply a Date object')
+    knxLog.get().error('DPT19: Must supply a Date object')
   else {
     // Sunday is 0 in Javascript, but 7 in KNX.
     var day = (value.getDay() === 0) ? 7 : value.getDay();
@@ -32,7 +32,7 @@ exports.formatAPDU = function(value) {
 }
 
 exports.fromBuffer = function(buf) {
-  if (buf.length != 8) log.warn("DPT19: Buffer should be 8 bytes long")
+  if (buf.length != 8) knxLog.get().warn("DPT19: Buffer should be 8 bytes long")
   else {
     var d = new Date(buf[0]+1900, buf[1]-1, buf[2], buf[3] & 0b00011111, buf[4], buf[5]);
     return d;

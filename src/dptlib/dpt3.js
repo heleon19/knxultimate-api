@@ -3,13 +3,13 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT3.*: 4-bit dimming/blinds control
 //
 exports.formatAPDU = function(value) {
-  if (!value) log.warn("DPT3: cannot write null value");
+  if (!value) knxLog.get().warn("DPT3: cannot write null value");
   else {
     var apdu_data = new Buffer(1);
     if (typeof value == 'object' &&
@@ -17,16 +17,16 @@ exports.formatAPDU = function(value) {
       value.hasOwnProperty('data')) {
       apdu_data[0] = (value.decr_incr << 3) + (value.data & 0b00000111);
     } else {
-      log.error("Must supply a value object of {decr_incr, data}");
+      knxLog.get().error("Must supply a value object of {decr_incr, data}");
     }
-    //log.trace('formatAPU returns %j', apdu_data);
+    //knxLog.get().trace('formatAPU returns %j', apdu_data);
     return apdu_data;
   }
 }
 
 exports.fromBuffer = function(buf) {
   if (buf.length != 1) {
-    log.error("DPT3: Buffer should be 1 byte long");
+    knxLog.get().error("DPT3: Buffer should be 1 byte long");
   } else {
     return {
       decr_incr: (buf[0] & 0b00001000) >> 3,

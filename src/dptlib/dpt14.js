@@ -3,7 +3,7 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT14.*: 4-byte floating point value
@@ -15,14 +15,14 @@ const log = require('log-driver').logger;
 
 exports.formatAPDU = function(value) {
   if (!value || typeof value != 'number')
-    log.error('DPT14: Must supply a number value');
+    knxLog.get().error('DPT14: Must supply a number value');
   var apdu_data = new Buffer(4);
   apdu_data.writeFloatBE(value,0);
   return apdu_data;
 }
 
 exports.fromBuffer = function(buf) {
-  if (buf.length != 4) log.warn("DPT14: Buffer should be 4 bytes long");
+  if (buf.length != 4) knxLog.get().warn("DPT14: Buffer should be 4 bytes long");
   return buf.readFloatBE(0);
 }
 

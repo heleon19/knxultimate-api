@@ -3,7 +3,7 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 exports.formatAPDU = function(value) {
   var f = parseFloat(value);
@@ -18,7 +18,7 @@ exports.formatAPDU = function(value) {
 
 exports.fromBuffer = function(buf) {
   if (buf.length != 1) {
-    log.warn("DPT1.fromBuffer: buf should be 1 byte (got %d bytes)", buf.length);
+    knxLog.get().warn("DPT1.fromBuffer: buf should be 1 byte (got %d bytes)", buf.length);
   } else return (buf[0] != 0);
 }
 

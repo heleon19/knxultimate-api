@@ -3,7 +3,7 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT238: 1-byte unsigned value
@@ -12,7 +12,7 @@ const log = require('log-driver').logger;
 exports.formatAPDU = function(value) {
     var apdu_data = new Buffer(1);
     apdu_data[0] = value;
-    log.trace('dpt238.js : input value = ' + value + '   apdu_data = ' + apdu_data);
+    knxLog.get().trace('dpt238.js : input value = ' + value + '   apdu_data = ' + apdu_data);
     return apdu_data;
 }
 

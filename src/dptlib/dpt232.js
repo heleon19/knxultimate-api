@@ -3,7 +3,7 @@
 * (C) 2016-2019 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT232: 3-byte RGB color array
@@ -11,7 +11,7 @@ const log = require('log-driver').logger;
 //
 exports.formatAPDU = function(value) {
     if (!value) {
-        log.error("DPT232: cannot write null value");
+        knxLog.get().error("DPT232: cannot write null value");
     } else {
         var apdu_data;
         if (typeof value == 'object' &&
@@ -19,7 +19,7 @@ exports.formatAPDU = function(value) {
             value.hasOwnProperty('green') && value.green >= 0 && value.green <= 255 &&
             value.hasOwnProperty('blue')  && value.blue  >= 0 && value.blue  <= 255) {
         } else {
-            log.error("DPT232: Must supply an value {red:0-255, green:0-255, blue:0-255}");
+            knxLog.get().error("DPT232: Must supply an value {red:0-255, green:0-255, blue:0-255}");
         }
         return new Buffer([
             Math.floor(value.red), 

@@ -3,13 +3,13 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 const util = require('util');
 //
 // DPT11.*: date
 //
 exports.formatAPDU = function(value) {
-  if (!value) log.error("cannot write null value for DPT11")
+  if (!value) knxLog.get().error("cannot write null value for DPT11")
   else {
     var apdu_data = new Buffer(3);
     switch(typeof value) {
@@ -27,7 +27,7 @@ exports.formatAPDU = function(value) {
         }
     }
     if (isNaN(value.getDate())) {
-      log.error('Must supply a numeric timestamp, Date or String object for DPT11 Date');
+      knxLog.get().error('Must supply a numeric timestamp, Date or String object for DPT11 Date');
     } else {
       apdu_data[0] = value.getDate();
       apdu_data[1] = value.getMonth() + 1;
@@ -39,7 +39,7 @@ exports.formatAPDU = function(value) {
 }
 
 exports.fromBuffer = function(buf) {
-  if (buf.length != 3) log.error("Buffer should be 3 bytes long")
+  if (buf.length != 3) knxLog.get().error("Buffer should be 3 bytes long")
   else {
     var day   = (buf[0] & 31);      //0b00011111);
     var month = (buf[1] & 15);      //0b00001111);
@@ -50,7 +50,7 @@ exports.fromBuffer = function(buf) {
       year >= 1990 & year <= 2089) {
       return new Date(year, month-1, day);
     } else {
-      log.error(
+      knxLog.get().error(
         "%j => %d/%d/%d is not valid date according to DPT11, setting to 1990/01/01",
         buf, day, month, year);
       //return new Date(1990, 01, 01);

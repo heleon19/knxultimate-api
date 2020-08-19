@@ -3,7 +3,7 @@
 * (C) 2020 Supergiovane
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 // Structure of DPT 251.600
 // Byte 0: R value
@@ -21,7 +21,7 @@ const log = require('log-driver').logger;
     
 exports.formatAPDU = function (value) {
     if (!value) {
-        log.error("DPT251: cannot write null value");
+        knxLog.get().error("DPT251: cannot write null value");
     } else {
         if (typeof value == 'object' &&
             value.hasOwnProperty('white') && value.white >= 0 && value.white <= 255 &&
@@ -30,7 +30,7 @@ exports.formatAPDU = function (value) {
             value.hasOwnProperty('blue') && value.blue >= 0 && value.blue <= 255 && 
             value.hasOwnProperty('mR') && value.hasOwnProperty('mG') && value.hasOwnProperty('mB') && value.hasOwnProperty('mW') ) {
         } else {
-            log.error("DPT251: Must supply an value {red:0-255, green:0-255, blue:0-255, white:0-255, mR:0-1, mG:0-1, mB:0-1, mW:0-1}");
+            knxLog.get().error("DPT251: Must supply an value {red:0-255, green:0-255, blue:0-255, white:0-255, mR:0-1, mG:0-1, mB:0-1, mW:0-1}");
         }
         var bitVal= parseInt("0000" + value.mR + value.mG + value.mB + value.mW, 2) ;
 

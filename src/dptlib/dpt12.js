@@ -6,20 +6,20 @@
 // DPT12.*:  4-byte unsigned value
 //
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 
 
 exports.formatAPDU = function(value) {
   if (!value || typeof value != 'number')
-    log.error('DPT12: Must supply a number value');
+    knxLog.get().error('DPT12: Must supply a number value');
   var apdu_data = new Buffer(4);
   apdu_data.writeUIntBE(value,0,4);
   return apdu_data;
 }
 
 exports.fromBuffer = function(buf) {
-  if (buf.length != 4) log.warn("DPT12: Buffer should be 4 bytes long");
+  if (buf.length != 4) knxLog.get().warn("DPT12: Buffer should be 4 bytes long");
   return buf.readUIntBE(0, 4) ;
 }
 

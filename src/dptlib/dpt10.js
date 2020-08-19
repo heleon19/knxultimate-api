@@ -3,7 +3,7 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT10.*: time (3 bytes)
@@ -28,12 +28,12 @@ exports.formatAPDU = function(value) {
         minute = parseInt(match[2]);
         second = parseInt(match[3]);
       } else {
-        log.warn("DPT10: invalid time format (%s)", value);
+        knxLog.get().warn("DPT10: invalid time format (%s)", value);
       }
       break;
     case 'object':
       if (value.constructor.name != 'Date') {
-        log.warn('Must supply a Date or String for DPT10 time');
+        knxLog.get().warn('Must supply a Date or String for DPT10 time');
         break;
       }
     case 'number':
@@ -53,7 +53,7 @@ exports.formatAPDU = function(value) {
 // return a JS Date from a DPT10 payload, with DOW/hour/month/seconds set to the buffer values.
 // The week/month/year are inherited from the current timestamp.
 exports.fromBuffer = function(buf) {
-  if (buf.length != 3) log.warn("DPT10: Buffer should be 3 bytes long")
+  if (buf.length != 3) knxLog.get().warn("DPT10: Buffer should be 3 bytes long")
   else {
     var d = new Date();
     var dow = (buf[0] & 0b11100000) >> 5;
@@ -71,7 +71,7 @@ exports.fromBuffer = function(buf) {
       d.setMinutes(minutes);
       d.setSeconds(seconds);
     } else {
-      log.warn(
+      knxLog.get().warn(
         "DPT10: buffer %j (decoded as %d:%d:%d) is not a valid time",
         buf, hours, minutes, seconds);
     }

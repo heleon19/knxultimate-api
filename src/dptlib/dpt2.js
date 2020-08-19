@@ -3,13 +3,13 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 // DPT2 frame description.
 // Always 8-bit aligned.
 exports.formatAPDU = function(value) {
   if (!value) {
-    log.error("DPT2: cannot write null value");
+    knxLog.get().error("DPT2: cannot write null value");
   } else {
     var apdu_data;
     if (typeof value == 'object' &&
@@ -17,7 +17,7 @@ exports.formatAPDU = function(value) {
       value.hasOwnProperty('data')) {
       apdu_data = (value.priority << 1) + (value.data & 0b00000001);
     } else {
-      log.error("DPT2: Must supply an value {priority:<bool>, data:<bool>}");
+      knxLog.get().error("DPT2: Must supply an value {priority:<bool>, data:<bool>}");
     }
     return new Buffer([apdu_data]);
   }
@@ -25,7 +25,7 @@ exports.formatAPDU = function(value) {
 
 exports.fromBuffer = function(buf) {
   if (buf.length != 1) {
-    log.error( "Buffer should be 1 byte long" );
+    knxLog.get().error( "Buffer should be 1 byte long" );
   } else
   return {
     priority: (buf[0] & 0b00000011) >> 1,

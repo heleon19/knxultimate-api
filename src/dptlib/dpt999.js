@@ -3,7 +3,7 @@
 * 08/04/2020 Supergiovane
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT999: 10 Bytes (RFID keypad style)
@@ -19,7 +19,7 @@ function hexToDec(hex) {
 }
 
 exports.formatAPDU = function (value) {
-  if (typeof value != 'string' || value.length < 10) log.warn("Must supply an HEX string value of 10 bytes. Please don't add '$' nor '0x' Example 12340000000000000000")
+  if (typeof value != 'string' || value.length < 10) knxLog.get().warn("Must supply an HEX string value of 10 bytes. Please don't add '$' nor '0x' Example 12340000000000000000")
   else {
     value = value.toUpperCase().replace(/\$/g, "").replace(/0X/g, "").replace(/ /g, ""); // Remove the $ and 0x
     var apdu_data = new Buffer(10);

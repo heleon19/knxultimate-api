@@ -3,14 +3,14 @@
 * (C) 2016-2018 Elias Karakoulakis
 */
 
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 //
 // DPT16: ASCII string (max 14 chars)
 //
 
 exports.formatAPDU = function(value) {
-  if (typeof value != 'string') log.warn("Must supply a string value")
+  if (typeof value != 'string') knxLog.get().warn("Must supply a string value")
   else {
     var buf = new Buffer(14);
     buf.write(value, 'ascii')

@@ -9,15 +9,15 @@
 
 
 const util = require('util');
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 exports.formatAPDU = function (value) {
     var apdu_data = new Buffer(2);
     if (!isFinite(value)) {
-        log.warn("DPT7: cannot write non-numeric or undefined value");
+        knxLog.get().warn("DPT7: cannot write non-numeric or undefined value");
     } else {
         if (value < 0 || value > 65535) {
-            log.warn("DPT7: value must be between 0 and 65535. Auto adjousting.");
+            knxLog.get().warn("DPT7: value must be between 0 and 65535. Auto adjousting.");
             if (value < 0) value = 0;
             if (value > 65535) value = 65535;
         }
@@ -29,7 +29,7 @@ exports.formatAPDU = function (value) {
 
 exports.fromBuffer = function (buf) {
     if (buf.length != 2) {
-        log.warn("DPT7.fromBuffer: buf should be 2 bytes long (got %d bytes)", buf.length);
+        knxLog.get().warn("DPT7.fromBuffer: buf should be 2 bytes long (got %d bytes)", buf.length);
     } else {
         return (buf[0] * 256) + buf[1]
     }

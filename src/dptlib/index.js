@@ -37,7 +37,7 @@ List 3-byte value                  3 Byte                  DPT 232	  DPT 232	RGB
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const log = require('log-driver').logger;
+const knxLog = require('./../KnxLog');
 
 var matches;
 var dirEntries = fs.readdirSync(__dirname);
@@ -52,7 +52,7 @@ for (var i = 0; i < dirEntries.length; i++) {
     }
     mod.id = dptid;
     dpts[dptid] = mod;
-    //log.trace('DPT library: loaded %s (%s)', dptid, dpts[dptid].basetype.desc);
+    //knxLog.get().trace('DPT library: loaded %s (%s)', dptid, dpts[dptid].basetype.desc);
   }
 }
 
@@ -89,9 +89,9 @@ dpts.populateAPDU = function(value, apdu, dptid) {
   // get the raw APDU data for the given JS value
   if (typeof dpt.formatAPDU == 'function') {
     // nothing to do here, DPT-specific formatAPDU implementation will handle everything
-    // log.trace('>>> custom formatAPDU(%s): %j', dptid, value);
+    // knxLog.get().trace('>>> custom formatAPDU(%s): %j', dptid, value);
     apdu.data = dpt.formatAPDU(value);
-    // log.trace('<<< custom formatAPDU(%s): %j', dptid, apdu.data);
+    // knxLog.get().trace('<<< custom formatAPDU(%s): %j', dptid, apdu.data);
   } else {
     if (!isFinite(value)) throw util.format("Invalid value, expected a %s",
       dpt.desc);
@@ -103,7 +103,7 @@ dpts.populateAPDU = function(value, apdu, dptid) {
         'scalar_range')) {
       var scalar = dpt.subtype.scalar_range;
       if (value < scalar[0] || value > scalar[1]) {
-        log.trace(
+        knxLog.get().trace(
           "Value %j(%s) out of scalar range(%j) for %s",
           value, (typeof value), scalar, dpt.id);
       } else {
@@ -116,7 +116,7 @@ dpts.populateAPDU = function(value, apdu, dptid) {
     } else {
       // just a plain numeric value, only check if within bounds
       if (value < range[0] || value > range[1]) {
-        log.trace("Value %j(%s) out of bounds(%j) for %s.%s",
+        knxLog.get().trace("Value %j(%s) out of bounds(%j) for %s.%s",
           value, (typeof value), range, dpt.id, dpt.subtypeid);
       }
     }
@@ -127,7 +127,7 @@ dpts.populateAPDU = function(value, apdu, dptid) {
       apdu.data.writeUIntBE(tgtvalue, 0, nbytes);
     }
   }
-  // log.trace('generic populateAPDU tgtvalue=%j(%s) nbytes=%d => apdu=%j', tgtvalue, typeof tgtvalue, nbytes, apdu);
+  // knxLog.get().trace('generic populateAPDU tgtvalue=%j(%s) nbytes=%d => apdu=%j', tgtvalue, typeof tgtvalue, nbytes, apdu);
   return apdu;
 }
 
@@ -145,7 +145,7 @@ dpts.fromBuffer = function(buf, dpt) {
     // nothing to do here, DPT-specific fromBuffer implementation will handle everything
     value = dpt.fromBuffer(buf);
   } else {
-    // log.trace('%s buflength == %d => %j', typeof buf, buf.length, JSON.stringify(buf) );
+    // knxLog.get().trace('%s buflength == %d => %j', typeof buf, buf.length, JSON.stringify(buf) );
     // get a raw unsigned integer from the buffer
     if (buf.length > 6) {
       throw "cannot handle unsigned integers more then 6 bytes in length"
@@ -155,7 +155,7 @@ dpts.fromBuffer = function(buf, dpt) {
     } else {
       value = buf.readUIntBE(0,buf.length);
     }
- // log.trace(' ../knx/src/index.js : DPT : ' + JSON.stringify(dpt));   // for exploring dpt and implementing description
+ // knxLog.get().trace(' ../knx/src/index.js : DPT : ' + JSON.stringify(dpt));   // for exploring dpt and implementing description
     if (dpt.hasOwnProperty('subtype') && dpt.subtype.hasOwnProperty(
         'scalar_range')) {
       var range = (dpt.basetype.hasOwnProperty('range')) ?
@@ -166,10 +166,10 @@ dpts.fromBuffer = function(buf, dpt) {
       var a = (scalar[1] - scalar[0]) / (range[1] - range[0]);
       var b = (scalar[0] - range[0]);
       value = Math.round(a * value + b);
-      //log.trace('fromBuffer scalar a=%j b=%j %j', a,b, value);
+      //knxLog.get().trace('fromBuffer scalar a=%j b=%j %j', a,b, value);
     }
   }
-  //  log.trace('generic fromBuffer buf=%j, value=%j', buf, value);
+  //  knxLog.get().trace('generic fromBuffer buf=%j, value=%j', buf, value);
   return value;
 }
 
